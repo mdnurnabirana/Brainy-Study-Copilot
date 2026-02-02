@@ -1,11 +1,11 @@
 import React from 'react';
 
-const ProfilePage = () => {
+const AppLayout = () => {
     return (
         <div>
-            ProfilePage
+            AppLayout
         </div>
     );
 };
 
-export default ProfilePage;
+export default AppLayout;
