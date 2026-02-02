@@ -5,7 +5,10 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import connectDB from "./config/db.js";
 import errorHander from "./middleware/errorHandler.js";
+
+import authRoutes from "./routes/authRoutes.js";
 
 // ES6 module __dirname alternative
 const __filename = fileURLToPath(import.meta.url);
@@ -49,7 +52,7 @@ app.use((req, res) => {
 // Start server
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-    console.log('Server running in ${process.env.NODE_ENV} mode on port ${PORT}');
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
 process.on('unhandledRejection', (err) => {
