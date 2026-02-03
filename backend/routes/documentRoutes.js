@@ -4,7 +4,7 @@ import {
   getDocuments,
   getDocument,
   deleteDocument,
-} from "../controllers/docuementController.js";
+} from "../controllers/documentController.js";
 import protect from "../middleware/auth.js";
 import upload from "../config/multer.js";
 
