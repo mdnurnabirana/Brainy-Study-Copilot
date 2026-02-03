@@ -3,7 +3,7 @@ import Flashcard from "../models/Flashcard.js";
 // @desc    Get all flashcards for a document
 // @route   GET /api/flashcards/:documentId
 // @access  Private
-export const getAllFlashcards = async (req, res, next) => {
+export const getFlashcards = async (req, res, next) => {
   try {
     const flashcards = await Flashcard.find({
       userId: req.user._id,
