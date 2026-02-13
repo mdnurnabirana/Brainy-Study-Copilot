@@ -6,7 +6,7 @@ import DashboardPage from "./pages/Dashboard/DashboardPage";
 import DocumentListPage from "./pages/Documents/DocumentListPage";
 import DocumentDetailPage from "./pages/Documents/DocumentDetailPage";
 import FlashcardListPage from "./pages/Flashcards/FlashcardListPage";
-import FlashcardDetailPage from "./pages/Flashcards/FlashcardDetailPage";
+import FlashcardPage from "./pages/Flashcards/FlashcardPage";
 import QuizTakePage from "./pages/Quizzes/QuizTakePage";
 import QuizResultPage from "./pages/Quizzes/QuizResultPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
@@ -48,7 +48,7 @@ const App = () => {
           <Route path="/flashcards" element={<FlashcardListPage />} />
           <Route
             path="/documents/:id/flashcards"
-            element={<FlashcardDetailPage />}
+            element={<FlashcardPage />}
           />
           <Route path="/quizzes/:quizId" element={<QuizTakePage />} />
           <Route path="/quizzes/:quizId/results" element={<QuizResultPage />} />
