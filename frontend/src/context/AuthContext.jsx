@@ -41,10 +41,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
 
-    setTimeout(() => {
-      setUser(userData);
-      setIsAuthenticated(true);
-    }, 1000);
+    // Set auth state immediately to avoid navigation race conditions
+    setUser(userData);
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
@@ -53,7 +52,8 @@ export const AuthProvider = ({ children }) => {
 
     setUser(null);
     setIsAuthenticated(false);
-    window.location.href = "";
+    // Redirect to login page after logout
+    window.location.href = "/login";
   };
 
   const updateUser = (updatedUserData) => {

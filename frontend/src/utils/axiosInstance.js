@@ -31,11 +31,20 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
+      // Handle unauthorized globally: clear auth and redirect to login
+      if (error.response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return Promise.reject(error.response.data || error);
+      }
+
       if (error.response.status === 500) {
         console.error("Server error. Please try again later.");
       } else if (error.code === "ECONNABORTED") {
         console.error("Request timeout. Please try again.");
       }
+
       return Promise.reject(error);
     }
   },
