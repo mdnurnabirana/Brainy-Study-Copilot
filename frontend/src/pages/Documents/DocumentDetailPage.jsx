@@ -4,15 +4,15 @@ import documentService from "../../services/documentService";
 import Spinner from "../../components/common/Spinner";
 import toast from "react-hot-toast";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import PageHeader from '../../components/common/PageHeader'
-import Tabs from '../../components/common/Tabs'
-import ChatInterface from '../../components/chat/ChatInterface'
-import AIActions from '../../components/ai/AIActions'
-import FlashcardManager from '../../components/flashcards/FlashcardManager'
-import QuizManager from '../../components/quizzes/QuizManager'
+import PageHeader from "../../components/common/PageHeader";
+import Tabs from "../../components/common/Tabs";
+import ChatInterface from "../../components/chat/ChatInterface";
+import AIActions from "../../components/ai/AIActions";
+import FlashcardManager from "../../components/flashcards/FlashcardManager";
+import QuizManager from "../../components/quizzes/QuizManager";
 import { BASE_URL } from "../../utils/apiPaths";
 
-const DocumentDetailPage = () => {
+const DocumentsDetailPage = () => {
   const { id } = useParams();
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,12 +40,23 @@ const DocumentDetailPage = () => {
 
     const filePath = document.data.filePath;
 
-    if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
-      return filePath;
-    }
+    // If it's an absolute URL, prefer it; but if it points to localhost
+    // and our frontend is using a different BASE_URL (e.g., production),
+    // rewrite to use BASE_URL so the browser can access the file.
+    try {
+      const parsed = new URL(filePath);
 
-    const baseUrl = BASE_URL || "http://localhost:8000";
-    return `${baseUrl}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
+      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        const baseUrl = BASE_URL || "https://brainy-study-copilot.onrender.com";
+        return `${baseUrl}${parsed.pathname}`;
+      }
+
+      return filePath;
+    } catch (e) {
+      // Not an absolute URL; treat as a relative path on the API server
+      const baseUrl = BASE_URL || "https://brainy-study-copilot.onrender.com";
+      return `${baseUrl}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
+    }
   };
 
   const renderContent = () => {
@@ -121,7 +132,21 @@ const DocumentDetailPage = () => {
     return <div className="text-center p-8">Document not found.</div>;
   }
 
-  return <div>DocumentDetailPage</div>;
+  return (
+    <div>
+      <div className="mb-4">
+        <Link
+          to={"/documents"}
+          className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Documents
+        </Link>
+      </div>
+      <PageHeader title={document.data.title} />
+      <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+    </div>
+  );
 };
 
-export default DocumentDetailPage;
+export default DocumentsDetailPage;

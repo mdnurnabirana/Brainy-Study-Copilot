@@ -1,51 +1,54 @@
-/**
+/**  //*This is a documentation comment. It explains what the function does
  * Split text into chunks for better AI processing
- * @param {string} text - Full text to chunk
+ * @param {string} text - Full text to chunk //*The function takes a text string as input
  * @param {number} chunkSize - Target size per chunk (in words)
  * @param {number} overlap - Number of words to overlap between chunks
- * @returns {Array<content: string, chunkIndex: number, pageNumber: number>}
+ * @returns {Array<{content: string,chunkIndex:number,pageNumber:number}>} //he function returns an array of objects, each describing one chunk
  */
+
 export const chunkText = (text, chunkSize = 500, overlap = 50) => {
-  if (!text || !text.trim().length === 0) {
+  if (!text || text.trim().length === 0) {
     return [];
   }
 
-  // Clean text while preserving paragraph structure
+  //Clean text while preserving paragraph structure
   const cleanedText = text
-    .replace(/\r\n/g, "\n")
-    .replace(/[^\s]+/g, "")
-    .replace(/\n /g, "\n")
-    .replace(/\t/g, "\t")
-    .trim();
+    .replace(/\r\n/g, "\n") // Convert Windows-style newlines (\r\n) to Unix-style (\n).
+    .replace(/\s+/g, " ") // Replace any run of whitespace (spaces, tabs, newlines) with a single space.
+    .replace(/\n /g, "\n") // Remove space after a newline
+    .replace(/ \n/g, "\n") // Remove space before a newline
+    .trim(); // Remove leading and trailing whitespace
 
   // Try to split by paragraphs (single or double newlines)
   const paragraphs = cleanedText
-    .split(/\n+/)
+    .split(/\n+/) //Split wherever one or more newline characters appear.
     .filter((p) => p.trim().length > 0);
 
-  const chunks = [];
-  let currentChunk = [];
-  let currentWordCount = 0;
-  let chunkIndex = 0;
+  const chunks = []; //final array that will store all text chunks.
+  let currentChunk = []; //temporary storage for paragraphs that are being grouped together.
+  let currentWordCount = 0; //umber of words currently inside currentChunk.
+  let chunkIndex = 0; //counter to give each chunk a unique index.
 
   for (const paragraph of paragraphs) {
     const paragraphWords = paragraph.trim().split(/\s+/);
     const paragraphWordCount = paragraphWords.length;
 
-    // If single paragraph exceeds chunk size, split it by words
+    //If single paragraph exceeds chunk size,split it by words
     if (paragraphWordCount > chunkSize) {
       if (currentChunk.length > 0) {
+        //there is already a chunk being built
         chunks.push({
+          //Save the current chunk
           content: currentChunk.join("\n\n"),
           chunkIndex: chunkIndex++,
           pageNumber: 0,
         });
-        currentChunk = [];
+        currentChunk = []; //Reset the chunk builder.
         currentWordCount = 0;
       }
-
-      // Split large paragraph into word-based chunks
+      //Split large paragraph into word-based chunks
       for (let i = 0; i < paragraphWords.length; i += chunkSize - overlap) {
+        //(chunkSize-overlap)->That means each new chunk shares overlap words with the previous one.
         const chunkWords = paragraphWords.slice(i, i + chunkSize);
         chunks.push({
           content: chunkWords.join(" "),
@@ -57,7 +60,7 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
       continue;
     }
 
-    // If adding this paragraph exceeds chunk size, save current chunk
+    // If adding this paragraph exceeds chunk size,save current chunk
     if (
       currentWordCount + paragraphWordCount > chunkSize &&
       currentChunk.length > 0
@@ -67,20 +70,24 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
         chunkIndex: chunkIndex++,
         pageNumber: 0,
       });
+
+      //Create overlap from previous chunk
+      const prevChunkText = currentChunk.join(" ");
+      const prevWords = prevChunkText.split(/\s+/);
+      const overlapText = prevWords
+        .slice(-Math.min(overlap, prevWords.length))
+        .join(" ");
+
+      currentChunk = [overlapText, paragraph.trim()];
+      currentWordCount = overlapText.slice(/\s+/).length + paragraphWordCount;
+    } else {
+      // Add paragraph to current chunk
+      currentChunk.push(paragraph.trim());
+      currentWordCount += paragraphWordCount;
     }
-
-    // Create overlap from previous chunk
-    const prevChunkText = currentChunk.join(" ");
-    const prevWords = prevChunkText.split(/\s+/);
-    const overlapText = prevWords
-      .slice(-Math.min(overlap, prevWords.length))
-      .join(" ");
-
-    currentChunk = [overlapText, paragraph.trim()];
-    currentWordCount = overlapText.split(/\.\s+/).length + paragraphWordCount;
   }
 
-  // Add the last chunk
+  //Add the last chunk
   if (currentChunk.length > 0) {
     chunks.push({
       content: currentChunk.join("\n\n"),
@@ -89,7 +96,7 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
     });
   }
 
-  // Fallback: if no chunks created, split by words
+  //Fallback: if no chunks created,split by words
   if (chunks.length === 0 && cleanedText.length > 0) {
     const allWords = cleanedText.split(/\s+/);
     for (let i = 0; i < allWords.length; i += chunkSize - overlap) {
@@ -99,7 +106,6 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
         chunkIndex: chunkIndex++,
         pageNumber: 0,
       });
-
       if (i + chunkSize >= allWords.length) break;
     }
   }
@@ -109,13 +115,14 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
 
 /**
  * Find relevant chunks based on keyword matching
- * @param {Array<Object>} chunks - Array of chunks
+ * @param {Array<Object>} chunks - Array of chuks
  * @param {string} query - Search query
  * @param {number} maxChunks - Maximum chunks to return
  * @returns {Array<Object>}
  */
+
 export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
-  if (!chunks || !chunks.length === 0 || !query) {
+  if (!chunks || chunks.length === 0 || !query) {
     return [];
   }
 
@@ -143,14 +150,14 @@ export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
     "it",
   ]);
 
-  // Extract and clean query words
+  //Extract and clean query words
   const queryWords = query
     .toLowerCase()
     .split(/\s+/)
     .filter((w) => w.length > 2 && !stopWords.has(w));
 
   if (queryWords.length === 0) {
-    // Return clean chunk objects without Mongoose metadata
+    //Return clean chunk objects without Mongoose metadata
     return chunks.slice(0, maxChunks).map((chunk) => ({
       content: chunk.content,
       chunkIndex: chunk.chunkIndex,
@@ -161,23 +168,25 @@ export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
 
   const scoredChunks = chunks.map((chunk, index) => {
     const content = chunk.content.toLowerCase();
-    const contentWords = content.split(/[^+]/).length;
+    const contentWords = content.split(/\s+/).length;
     let score = 0;
 
-    // Score each query word
+    //Score each query word
     for (const word of queryWords) {
-      // Exact word match (higher score)
-      const exactMatches =
-        content.match(new RegExp(`\\b${word}\\b`, "g")) || [];
+      //Exact word match (higher score)
+      const exactMatches = (
+        content.match(new RegExp(`\\b${word}\\b`, "g")) || []
+      ).length; //\b means word boundary.
+      //Example: searching cat won’t match category
       score += exactMatches * 3;
 
-      // Partial match (lower score)
+      // Partial match(lower score)
       const partialMatches = (content.match(new RegExp(word, "g")) || [])
-        .length;
+        .length; //cat would match category, catalog, etc.
       score += Math.max(0, partialMatches - exactMatches) * 1.5;
     }
 
-    // Bonus: Multiple query words found
+    //Bonus:Multiple query words found
     const uniqueWordsFound = queryWords.filter((word) =>
       content.includes(word),
     ).length;
@@ -185,13 +194,13 @@ export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
       score += uniqueWordsFound * 2;
     }
 
-    // Normalize by content length
+    //Normalize by content length
     const normalizedScore = score / Math.sqrt(contentWords);
 
-    // Small bonus for earlier chunks
+    //Small bonus for earlier chunks
     const positionBonus = 1 - (index / chunks.length) * 0.1;
 
-    // Return clean object without Mongoose metadata
+    //Return clean object without Mongoose metadata
     return {
       content: chunk.content,
       chunkIndex: chunk.chunkIndex,
@@ -206,6 +215,7 @@ export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
   return scoredChunks
     .filter((chunk) => chunk.score > 0)
     .sort((a, b) => {
+      //sort ka comparator
       if (b.score !== a.score) {
         return b.score - a.score;
       }
