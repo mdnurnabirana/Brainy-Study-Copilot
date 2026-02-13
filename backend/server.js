@@ -10,7 +10,7 @@ import errorHander from "./middleware/errorHandler.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
-import flashCardRoutes from "./routes/flashCardRoutes.js";
+import flashCardRoutes from "./routes/flashcardRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
