@@ -1,5 +1,5 @@
 import Document from "../models/Document.js";
-import Flashcard from "../models/Flashcard.js";
+import Flashcard from "../models/FlashCard.js";
 import Quiz from "../models/Quiz.js";
 import ChatHistory from "../models/ChatHistory.js";
 import * as geminiService from "../utils/geminiService.js";
