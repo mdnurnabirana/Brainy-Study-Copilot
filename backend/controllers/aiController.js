@@ -5,12 +5,30 @@ import ChatHistory from "../models/ChatHistory.js";
 import * as geminiService from "../utils/geminiService.js";
 import { findRelevantChunks } from "../utils/textChunker.js";
 
+// Helper: ensure document has usable text
+const ensureExtractedText = (document, res) => {
+  if (
+    !document?.extractedText ||
+    typeof document.extractedText !== "string" ||
+    document.extractedText.trim().length < 10
+  ) {
+    res.status(400).json({
+      success: false,
+      error: "Document text is empty or not processed yet",
+      statusCode: 400,
+    });
+    return false;
+  }
+  return true;
+};
+
 //@desc    Generate flashcards from document
 //@route   POST /api/ai/generate-flashcards
 //@access  Private
 export const generateFlashcards = async (req, res, next) => {
   try {
     const { documentId, count = 10 } = req.body;
+
     if (!documentId) {
       return res.status(400).json({
         success: false,
@@ -27,19 +45,23 @@ export const generateFlashcards = async (req, res, next) => {
 
     if (!document) {
       return res.status(404).json({
-        status: false,
+        success: false,
         error: "Document not found or not ready",
         statusCode: 404,
       });
     }
 
+    if (!ensureExtractedText(document, res)) return;
+
+    const safeCount = Number.isNaN(parseInt(count)) ? 10 : parseInt(count);
+
     // Generate flashcards using Gemini
     const cards = await geminiService.generateFlashcards(
       document.extractedText,
-      parseInt(count),
+      safeCount,
     );
 
-    //Save to database
+    // Save to database
     const flashcardSet = await Flashcard.create({
       userId: req.user._id,
       documentId: document._id,
@@ -68,9 +90,10 @@ export const generateFlashcards = async (req, res, next) => {
 export const generateQuiz = async (req, res, next) => {
   try {
     const { documentId, numQuestions = 5, title } = req.body;
+
     if (!documentId) {
       return res.status(400).json({
-        status: false,
+        success: false,
         error: "Please provide documentId",
         statusCode: 400,
       });
@@ -84,19 +107,25 @@ export const generateQuiz = async (req, res, next) => {
 
     if (!document) {
       return res.status(404).json({
-        status: false,
+        success: false,
         error: "Document not found or not ready",
         statusCode: 404,
       });
     }
 
-    //Generate quiz using Gemini
+    if (!ensureExtractedText(document, res)) return;
+
+    const safeNum = Number.isNaN(parseInt(numQuestions))
+      ? 5
+      : parseInt(numQuestions);
+
+    // Generate quiz using Gemini
     const questions = await geminiService.generateQuiz(
       document.extractedText,
-      parseInt(numQuestions),
+      safeNum,
     );
 
-    //Save to database
+    // Save to database
     const quiz = await Quiz.create({
       userId: req.user._id,
       documentId: document._id,
@@ -122,12 +151,6 @@ export const generateQuiz = async (req, res, next) => {
 //@access  Private
 export const generateSummary = async (req, res, next) => {
   try {
-    // if (!req.body) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         error: "Request body is missing",
-    //         statusCode: 400
-    // })};
     const { documentId } = req.body;
 
     if (!documentId) {
@@ -152,7 +175,9 @@ export const generateSummary = async (req, res, next) => {
       });
     }
 
-    //Generate summary using Gemini
+    if (!ensureExtractedText(document, res)) return;
+
+    // Generate summary using Gemini
     const summary = await geminiService.generateSummary(document.extractedText);
 
     res.status(200).json({
@@ -198,11 +223,13 @@ export const chat = async (req, res, next) => {
       });
     }
 
-    //Find relevant chunks
-    const relevantChunks = findRelevantChunks(document.chunks, question, 3);
+    const chunks = Array.isArray(document.chunks) ? document.chunks : [];
+
+    // Find relevant chunks
+    const relevantChunks = findRelevantChunks(chunks, question, 3);
     const chunkIndices = relevantChunks.map((c) => c.chunkIndex);
 
-    //Get or create chat history
+    // Get or create chat history
     let chatHistory = await ChatHistory.findOne({
       userId: req.user._id,
       documentId: document._id,
@@ -212,17 +239,17 @@ export const chat = async (req, res, next) => {
       chatHistory = await ChatHistory.create({
         userId: req.user._id,
         documentId: document._id,
-        message: [],
+        messages: [],
       });
     }
 
-    //Generate response using Gemini
+    // Generate response using Gemini
     const answer = await geminiService.chatWithContext(
       question,
       relevantChunks,
     );
 
-    //Save conversation
+    // Save conversation
     chatHistory.messages.push(
       {
         role: "user",
@@ -284,9 +311,11 @@ export const explainConcept = async (req, res, next) => {
       });
     }
 
-    //Find relevant chunks for the concept
-    const relevantChunks = findRelevantChunks(document.chunks, concept, 3);
-    const context = relevantChunks.map((c) => c.context).join("\n\n");
+    const chunks = Array.isArray(document.chunks) ? document.chunks : [];
+
+    // Find relevant chunks
+    const relevantChunks = findRelevantChunks(chunks, concept, 3);
+    const context = relevantChunks.map((c) => c?.context || "").join("\n\n");
 
     // Generate explanation using Gemini
     const explanation = await geminiService.explainConcept(concept, context);
@@ -298,7 +327,7 @@ export const explainConcept = async (req, res, next) => {
         explanation,
         relevantChunks: relevantChunks.map((c) => c.chunkIndex),
       },
-      messsage: "Explanation generated successfully",
+      message: "Explanation generated successfully",
     });
   } catch (error) {
     next(error);
@@ -306,7 +335,7 @@ export const explainConcept = async (req, res, next) => {
 };
 
 //@desc    Get chat history for a document
-//@route   Get /api/ai/chat-history/:documentId
+//@route   GET /api/ai/chat-history/:documentId
 //@access  Private
 export const getChatHistory = async (req, res, next) => {
   try {
@@ -323,12 +352,12 @@ export const getChatHistory = async (req, res, next) => {
     const chatHistory = await ChatHistory.findOne({
       userId: req.user._id,
       documentId: documentId,
-    }).select("messages"); //Only retrieve the messages array
+    }).select("messages");
 
     if (!chatHistory) {
       return res.status(200).json({
         success: true,
-        data: [], //Return an empty array if no chat history found
+        data: [],
         message: "No chat history found for this document",
       });
     }
