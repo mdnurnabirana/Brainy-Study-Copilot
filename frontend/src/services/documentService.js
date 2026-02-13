@@ -1,5 +1,5 @@
 import axiosInstance from "../utils/axiosInstance";
-import { API_PATHS } from "../utils/apiPaths";
+import { API_PATHS } from "../utils/apiPath";
 
 const getDocuments = async () => {
   try {
@@ -23,7 +23,7 @@ const uploadDocument = async (formData) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to upload document" };
+    throw error.response?.data || { message: "Failed to upload document." };
   }
 };
 

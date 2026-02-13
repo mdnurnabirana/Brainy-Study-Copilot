@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 const quizSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      //relationship between two MongoDB collections using Mongoose
+      type: mongoose.Schema.Types.ObjectId, //This says the value must be a MongoDB ObjectId.
+      ref: "User", //This ObjectId refers to a document in the User collection
       required: true,
     },
     documentId: {
@@ -19,12 +20,13 @@ const quizSchema = new mongoose.Schema(
     },
     questions: [
       {
+        //Each document will have a field called questions which is an array.
         question: {
           type: String,
           required: true,
         },
         options: {
-          type: [String],
+          type: [String], //array of string
           required: true,
           validate: [
             (array) => array.length === 4,
@@ -41,7 +43,7 @@ const quizSchema = new mongoose.Schema(
         },
         difficulty: {
           type: String,
-          enum: ["easy", "medium", "hard"],
+          enum: ["easy", "medium", "hard"], //Limits the field to only these values:
           default: "medium",
         },
       },
@@ -85,7 +87,7 @@ const quizSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-quizSchema.index({ userId: 1, documentId: 1 });
+quizSchema.index({ userId: 1, documentId: 1 }); //quickly locate documents without scanning the entire collection.
 
 const Quiz = mongoose.model("Quiz", quizSchema);
 

@@ -1,4 +1,4 @@
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown from "react-markdown"; //react-markdown is used when you want Markdown content to behave like real React UI, not just text.
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -7,7 +7,7 @@ const MarkdownRenderer = ({ content }) => {
   return (
     <div className="text-neutral-700">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm]} //Parse my markdown the same way GitHub does.
         components={{
           h1: ({ node, ...props }) => (
             <h1 className="text-xl font-bold mt-4 mb-2" {...props} />
@@ -44,7 +44,7 @@ const MarkdownRenderer = ({ content }) => {
             />
           ),
           code: ({ node, inline, className, children, ...props }) => {
-            const match = /language-(\w+)/.exec(className || ""); 
+            const match = /language-(\w+)/.exec(className || ""); //Extracts the programming language from className
             return !inline && match ? (
               <SyntaxHighlighter
                 style={dracula}
@@ -53,6 +53,7 @@ const MarkdownRenderer = ({ content }) => {
                 {...props}
               >
                 {String(children).replace(/\n$/, "")}{" "}
+                {/*Converts code to string and removes trailing newline */}
               </SyntaxHighlighter>
             ) : (
               <code

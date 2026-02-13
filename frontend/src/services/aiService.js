@@ -1,7 +1,8 @@
 import axiosInstance from "../utils/axiosInstance";
-import { API_PATHS } from "../utils/apiPaths";
+import { API_PATHS } from "../utils/apiPath";
 
 const generateFlashcards = async (documentId, options) => {
+  //Take all the key–value pairs inside options and copy them into this object.
   try {
     const response = await axiosInstance.post(
       API_PATHS.AI.GENERATE_FLASHCARDS,
@@ -30,7 +31,7 @@ const generateSummary = async (documentId) => {
     const response = await axiosInstance.post(API_PATHS.AI.GENERATE_SUMMARY, {
       documentId,
     });
-    return response.data;
+    return response.data?.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to generate summary" };
   }
@@ -41,7 +42,7 @@ const chat = async (documentId, message) => {
     const response = await axiosInstance.post(API_PATHS.AI.CHAT, {
       documentId,
       question: message,
-    });
+    }); //Removed history from payload
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Chat request failed" };
@@ -65,7 +66,7 @@ const getChatHistory = async (documentId) => {
     const response = await axiosInstance.get(
       API_PATHS.AI.GET_CHAT_HISTORY(documentId),
     );
-    return response.data;
+    return response.data?.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to fetch chat history" };
   }

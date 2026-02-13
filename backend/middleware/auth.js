@@ -4,15 +4,17 @@ import User from "../models/User.js";
 const protect = async (req, res, next) => {
   let token;
 
-  // Check if token exists in Authorization header
+  //Check if token exists in Authorization header//*It starts with "Bearer" (standard JWT format)
+  //Ex-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...//*Split next to space is the token
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
+    //when we do res.json({token}) in authController - Client stores the token (usually in memory, localStorage, or httpOnly cookie)
     try {
       token = req.headers.authorization.split(" ")[1];
 
-      // Verify token
+      //Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select("-password");
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Upload, Trash2, FileText, X } from "lucide-react";
+import { Plus, Upload, Trash2, FileText, X } from "lucide-react"; //lucide-react is used to add beautiful, scalable, customizable icons
 import toast from "react-hot-toast";
 
 import documentService from "../../services/documentService";
-import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
+import Button from "../../components/common/Button";
 import DocumentCard from "../../components/documents/DocumentCard";
 
 const DocumentListPage = () => {
@@ -39,10 +39,10 @@ const DocumentListPage = () => {
   }, []);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0]; //e → the event object (usually from an <input type="file">)
     if (file) {
       setUploadFile(file);
-      setUploadTitle(file.name.replace(/\.[^/.]+$/, ""));
+      setUploadTitle(file.name.replace(/\.[^/.]+$/, "")); //used to remove a file extension
     }
   };
 
@@ -96,7 +96,7 @@ const DocumentListPage = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center min-h-100">
+        <div className="flex items-center justify-center min-h-[400px]">
           <Spinner />
         </div>
       );
@@ -104,7 +104,7 @@ const DocumentListPage = () => {
 
     if (documents.length === 0) {
       return (
-        <div className="flex items-center justify-center min-h-100">
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center max-w-md">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-linear-to-br from-slate-100 to-slate-200 shadow-lg shadow-slate-200/50 mb-6">
               <FileText

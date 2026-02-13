@@ -1,22 +1,22 @@
 import Document from "../models/Document.js";
-import Flashcard from "../models/FlashCard.js";
+import Flashcard from "../models/Flashcard.js";
 import Quiz from "../models/Quiz.js";
 
-// @desc    Get user learning statistics
-// @route   GET /api/progress/dashboard
-// @access  Private
+//@desc    Get user learning statistics
+//@route   GET /api/progress/dashboard
+//@access  Private
 export const getDashboard = async (req, res, next) => {
   try {
     const userId = req.user._id;
 
-    // Get counts
+    //Get counts
     const totalDocuments = await Document.countDocuments({ userId });
     const totalFlashcardSets = await Flashcard.countDocuments({ userId });
     const totalQuizzes = await Quiz.countDocuments({ userId });
     const completedQuizzes = await Quiz.countDocuments({
       userId,
       completedAt: { $ne: null },
-    });
+    }); //Means “completedAt is not equal to null”//Count all quizzes for this user that have a non-null completedAt value
 
     // Get flashcard statistics
     const flashcardSets = await Flashcard.find({ userId });
@@ -30,16 +30,16 @@ export const getDashboard = async (req, res, next) => {
       starredFlashcards += set.cards.filter((c) => c.isStarred).length;
     });
 
-    // Get quiz statistics
+    //Get quiz statistics
     const quizzes = await Quiz.find({ userId, completedAt: { $ne: null } });
     const averageScore =
       quizzes.length > 0
         ? Math.round(
             quizzes.reduce((sum, q) => sum + q.score, 0) / quizzes.length,
-          )
+          ) //This adds up all quiz scores:sum starts at 0
         : 0;
 
-    // Recent activity
+    //Recent activity
     const recentDocuments = await Document.find({ userId })
       .sort({ lastAccessed: -1 })
       .limit(5)
@@ -51,8 +51,8 @@ export const getDashboard = async (req, res, next) => {
       .populate("documentId", "title")
       .select("title score totalQuestions completedAt");
 
-    // Study streak (simplified - in production, track daily activity)
-    const studyStreak = Math.floor(Math.random() * 7) + 1; // Mock data
+    //Study streak (simplified - in production, track daily activity)
+    const studyStreak = Math.floor(Math.random() * 7) + 1; //Mock date
 
     res.status(200).json({
       success: true,
@@ -74,7 +74,5 @@ export const getDashboard = async (req, res, next) => {
         },
       },
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) {}
 };

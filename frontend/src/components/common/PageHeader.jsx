@@ -10,6 +10,7 @@ const PageHeader = ({ title, subtitle, children }) => {
         {subtitle && <p className="text-slate-500 text-sm">{subtitle}</p>}
       </div>
       {children && <div>{children}</div>}{" "}
+      {/*Only render what’s inside if subtitle exists and is truthy.*/}
     </div>
   );
 };

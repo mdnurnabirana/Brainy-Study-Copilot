@@ -1,21 +1,21 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema(
+const userSchema = mongoose.Schema(
   {
     username: {
       type: String,
       required: [true, "Please provide a username"],
       unique: true,
       trim: true,
-      minlength: [3, "Username must be at least 3 characters long"],
+      minLength: [3, "Username must be at least 3 characters long"],
     },
     email: {
       type: String,
       required: [true, "Please provide an email"],
       unique: true,
       lowercase: true,
-      match: [/\S+@\S+\.\S+$/, "Please provide a valid email"],
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
     },
     password: {
       type: String,
@@ -29,18 +29,20 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, //It automatically adds and manages two fields in your documents:- createdAt: Date,updatedAt: Date
   },
 );
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
+  //use a normal function, not an arrow function
   if (!this.isModified("password")) {
-    return next();
+    //When you update other fields (like email or name), you don’t want to re-hash
+    return; //the already hashed password.
   }
 
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, salt); //await is necessary if you are using the async version of bcrypt.hash
 });
 
 // Compare password method

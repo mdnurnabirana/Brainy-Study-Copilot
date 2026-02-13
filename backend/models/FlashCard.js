@@ -1,4 +1,3 @@
-import { DeleteFileResponse } from "@google/genai";
 import mongoose from "mongoose";
 
 const flashcardSchema = new mongoose.Schema(

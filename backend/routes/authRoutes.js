@@ -1,5 +1,5 @@
 import express from "express";
-import { body } from "express-validator";
+import { body } from "express-validator"; //body function, which is used to validate fields that come from req.body.
 import {
   register,
   login,
@@ -9,8 +9,9 @@ import {
 } from "../controllers/authController.js";
 import protect from "../middleware/auth.js";
 
-const router = express.Router();
+const router = express.Router(); //Instead of putting all routes inside app.js, you split them into separate files.
 
+//*Validate Middleware
 const registerValidation = [
   body("username")
     .trim()
@@ -33,11 +34,11 @@ const loginValidation = [
   body("password").notEmpty().withMessage("Password is required"),
 ];
 
-// Public routes
+//* Public Routes
 router.post("/register", registerValidation, register);
 router.post("/login", loginValidation, login);
 
-// Protected routes
+//* Protected Routes
 router.get("/profile", protect, getProfile);
 router.put("/profile", protect, updateProfile);
 router.post("/change-password", protect, changePassword);

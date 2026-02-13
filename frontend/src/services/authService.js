@@ -1,16 +1,20 @@
 import axiosInstance from "../utils/axiosInstance";
-import { API_PATHS } from "../utils/apiPaths";
+import { API_PATHS } from "../utils/apiPath";
 
 const login = async (email, password) => {
   try {
     const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, {
+      //Uses your preconfigured axiosInstance, so:
+      // baseURL is already applied
+      // Headers are already set
+      // Interceptors (token, error handling, timeout) are active
       email,
       password,
     });
-    // Return the nested data object so callers get { user, token }
-    return response.data.data;
+    return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "An unknown error occurred" };
+    console.log(error);
+    throw error.response?.data || { message: "An unknown error occured" };
   }
 };
 
@@ -23,7 +27,7 @@ const register = async (username, email, password) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "An unknown error occurred" };
+    throw error.response?.data || { message: "An unknown error occured" };
   }
 };
 
@@ -32,7 +36,7 @@ const getProfile = async () => {
     const response = await axiosInstance.get(API_PATHS.AUTH.GET_PROFILE);
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "An unknown error occurred" };
+    throw error.response?.data || { message: "An unknown error occured" };
   }
 };
 
@@ -44,7 +48,7 @@ const updateProfile = async (userData) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "An unknown error occurred" };
+    throw error.response?.data || { message: "An unknown error occured" };
   }
 };
 
@@ -56,7 +60,7 @@ const changePassword = async (passwords) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "An unknown error occurred" };
+    throw error.response?.data || { message: "An unknown error occured" };
   }
 };
 

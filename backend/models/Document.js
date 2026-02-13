@@ -9,7 +9,7 @@ const documentSchema = new mongoose.Schema(
     },
     title: {
       type: String,
-      required: [true, "Please add a title"],
+      required: [true, "Please provide a document title"],
       trim: true,
     },
     fileName: {
@@ -24,7 +24,7 @@ const documentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    exteractedText: {
+    extractedText: {
       type: String,
       default: "",
     },
@@ -44,7 +44,7 @@ const documentSchema = new mongoose.Schema(
         },
       },
     ],
-    uploadDtate: {
+    uploadDate: {
       type: Date,
       default: Date.now,
     },
@@ -63,7 +63,8 @@ const documentSchema = new mongoose.Schema(
   },
 );
 
-documentSchema.index({ userId: 1, uploadDtate: -1 });
+//Index for faster queries
+documentSchema.index({ userId: 1, uploadDate: -1 });
 
 const Document = mongoose.model("Document", documentSchema);
 

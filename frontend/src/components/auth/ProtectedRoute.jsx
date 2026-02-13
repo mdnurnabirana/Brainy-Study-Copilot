@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router";
-import { useAuth } from "../../context/AuthContext";
 import AppLayout from "../layout/AppLayout";
+import { useAuth } from "../../context/AuthContext";
 
 const ProtectedRoute = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -12,10 +12,10 @@ const ProtectedRoute = () => {
 
   return isAuthenticated ? (
     <AppLayout>
-      <Outlet />
+      <Outlet /> {/*childeren routes of ProtectedRoute in app.jsx will render*/}
     </AppLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to={"/login"} replace />
   );
 };
 

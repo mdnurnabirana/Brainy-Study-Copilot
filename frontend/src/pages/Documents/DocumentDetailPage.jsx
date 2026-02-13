@@ -10,7 +10,7 @@ import ChatInterface from "../../components/chat/ChatInterface";
 import AIActions from "../../components/ai/AIActions";
 import FlashcardManager from "../../components/flashcards/FlashcardManager";
 import QuizManager from "../../components/quizzes/QuizManager";
-import { BASE_URL } from "../../utils/apiPaths";
+import { BASE_URL } from "../../utils/apiPath";
 
 const DocumentsDetailPage = () => {
   const { id } = useParams();
@@ -40,23 +40,13 @@ const DocumentsDetailPage = () => {
 
     const filePath = document.data.filePath;
 
-    // If it's an absolute URL, prefer it; but if it points to localhost
-    // and our frontend is using a different BASE_URL (e.g., production),
-    // rewrite to use BASE_URL so the browser can access the file.
-    try {
-      const parsed = new URL(filePath);
-
-      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
-        const baseUrl = BASE_URL || "https://brainy-study-copilot.onrender.com";
-        return `${baseUrl}${parsed.pathname}`;
-      }
-
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
       return filePath;
-    } catch (e) {
-      // Not an absolute URL; treat as a relative path on the API server
-      const baseUrl = BASE_URL || "https://brainy-study-copilot.onrender.com";
-      return `${baseUrl}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
     }
+
+    const baseUrl =
+      BASE_URL || "https://brainy-study-copilot.onrender.com";
+    return `${baseUrl}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
   };
 
   const renderContent = () => {

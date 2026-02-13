@@ -1,23 +1,27 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
+//useContext is used to access data that is shared globally in your React app without passing props manually through every component.
+//You create a Context once, provide a value at a high level, and consume it anywhere below
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext); //*useContext(AuthContext) reads what AuthProvider stored
   if (!context) {
+    //Throws an error if someone tries to use useAuth without wrapping their app in AuthProvider <AuthProvider>.
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
+  //The whole point of the provider is to expose auth-related state and functions to the rest of the app//*{children} represents all components wrapped inside <AuthProvider>
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
-  }, []);
+  }, []); //The empty dependency array [] means:→ Run this effect only once, after the initial render
 
   const checkAuthStatus = async () => {
     try {
@@ -41,7 +45,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
 
-    // Set auth state immediately to avoid navigation race conditions
     setUser(userData);
     setIsAuthenticated(true);
   };
@@ -52,12 +55,11 @@ export const AuthProvider = ({ children }) => {
 
     setUser(null);
     setIsAuthenticated(false);
-    // Redirect to login page after logout
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
-  const updateUser = (updatedUserData) => {
-    const newUserData = { ...user, ...updatedUserData };
+  const updateUser = (updateUserData) => {
+    const newUserData = { ...user, ...updateUserData };
     localStorage.setItem("user", JSON.stringify(newUserData));
     setUser(newUserData);
   };
@@ -73,4 +75,5 @@ export const AuthProvider = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  //Makes value available to all components inside <AuthProvider>
 };

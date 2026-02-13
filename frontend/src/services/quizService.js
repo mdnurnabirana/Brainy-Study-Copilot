@@ -1,5 +1,5 @@
 import axiosInstance from "../utils/axiosInstance";
-import { API_PATHS } from "../utils/apiPaths";
+import { API_PATHS } from "../utils/apiPath";
 
 const getQuizzesForDocument = async (documentId) => {
   try {
@@ -42,7 +42,7 @@ const getQuizResults = async (quizId) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch quiz results" };
+    throw error.response?.data || { message: "Failed to delete quiz" };
   }
 };
 

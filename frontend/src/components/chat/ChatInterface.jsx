@@ -17,6 +17,9 @@ const ChatInterface = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    //messagesEndRef.current points to the last empty <div>
+    //scrollIntoView() scrolls the container so that this element becomes visible
+    //With behavior: "smooth", the scroll is animated
   };
 
   useEffect(() => {
@@ -48,7 +51,7 @@ const ChatInterface = () => {
       content: message,
       timestamp: new Date(),
     };
-    setHistory((prev) => [...prev, userMessage]); 
+    setHistory((prev) => [...prev, userMessage]); //It appends a new message to the existing history array
     setMessage("");
     setLoading(true);
 
@@ -147,6 +150,7 @@ const ChatInterface = () => {
           history.map(renderMessage)
         )}
         <div ref={messagesEndRef} />
+        {/*This attaches a React ref (messagesEndRef) to that <div> so you can directly access its DOM node. It’s commonly used as a “scroll anchor,” especially in chat apps. */}
         {loading && (
           <div className="flex items-center gap-3 my-4">
             <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/25 flex items-center justify-center shrink-0">

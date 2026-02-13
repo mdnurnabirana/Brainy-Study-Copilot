@@ -1,22 +1,23 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Generate JWT token
+//Generate JWT token
 const generateToken = (id) => {
+  //JWT lets the server prove “this user is logged in” without storing session data in memory or a database//*Jab tak ye token rahega tab tak user logged in rahega
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 };
 
-// @desc    Register new user
-// @route   POST /api/auth/register
-// @access  Public
+// @desc   Register new user
+// @route  POST /api/auth/register
+// @access Public
 export const register = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
-    // Check if user exists
-    const userExists = await User.findOne({ $or: [{ email }] });
+    //Check if user exists
+    const userExists = await User.findOne({ $or: [{ email }] }); //$or is only useful when you want to match multiple alternative conditions(Unnecessary here).
 
     if (userExists) {
       return res.status(400).json({
@@ -29,13 +30,14 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // Create user
+    //Create user
     const user = await User.create({
       username,
       email,
       password,
     });
 
+    //Generate token
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -48,7 +50,7 @@ export const register = async (req, res, next) => {
           profileImage: user.profileImage,
           createdAt: user.createdAt,
         },
-        token,
+        token, //Client stores the token (usually in memory, localStorage, or httpOnly cookie)
       },
       message: "User registered successfully",
     });
@@ -57,14 +59,14 @@ export const register = async (req, res, next) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
+// @desc   Login user
+// @route  POST /api/auth/login
+// @access Public
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
+    //Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -73,8 +75,8 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // Check for user (include password for comparison)
-    const user = await User.findOne({ email }).select("+password");
+    //Check for user {include password for comparison}
+    const user = await User.findOne({ email }).select("+password"); //we have written select: false in userSchema(password field)//+ means:“Include this field even though it is excluded by default.
 
     if (!user) {
       return res.status(401).json({
@@ -85,7 +87,7 @@ export const login = async (req, res, next) => {
     }
 
     // Check password
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.matchPassword(password); //matchPassword is a method in UserSchema
 
     if (!isMatch) {
       return res.status(401).json({
@@ -95,30 +97,28 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // Generate token
+    //Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({
       success: true,
-      data: {
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          profileImage: user.profileImage,
-        },
-        token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        profileImage: user.profileImage,
       },
-      message: "Login successful",
+      token, //Client stores the token (usually in memory, localStorage, or httpOnly cookie)
+      message: "login successful",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get user profile
-// @route   GET /api/auth/profile
-// @access  Private
+// @desc   Get user profile
+// @route  GET /api/auth/profile
+// @access Private
 export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
@@ -169,7 +169,7 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
-// @desc    Change password
+// @desc    Change Password
 // @route   POST /api/auth/change-password
 // @access  Private
 export const changePassword = async (req, res, next) => {
@@ -186,7 +186,7 @@ export const changePassword = async (req, res, next) => {
 
     const user = await User.findById(req.user._id).select("+password");
 
-    // Check current password
+    //Check current password
     const isMatch = await user.matchPassword(currentPassword);
 
     if (!isMatch) {
@@ -197,7 +197,7 @@ export const changePassword = async (req, res, next) => {
       });
     }
 
-    // Update password
+    //Update Password
     user.password = newPassword;
     await user.save();
 

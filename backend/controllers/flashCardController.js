@@ -1,8 +1,8 @@
-import Flashcard from "../models/FlashCard.js";
+import Flashcard from "../models/Flashcard.js";
 
-// @desc    Get all flashcards for a document
-// @route   GET /api/flashcards/:documentId
-// @access  Private
+//@desc    Get all flashcards for a document
+//@route   GET /api/flashcards/:documentId
+//@access  Private
 export const getFlashcards = async (req, res, next) => {
   try {
     const flashcards = await Flashcard.find({
@@ -10,7 +10,8 @@ export const getFlashcards = async (req, res, next) => {
       documentId: req.params.documentId,
     })
       .populate("documentId", "title fileName")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }); //populate->Replaces the documentId field (which is normally just an ObjectId) with the actual document data
+    //sort->Sorts the flashcards so the newest ones come first.
 
     res.status(200).json({
       success: true,
@@ -41,13 +42,14 @@ export const getAllFlashcardSets = async (req, res, next) => {
   }
 };
 
-// @desc    Mark flashcard as reviewed
-// @route   POST /api/flashcards/:cardId/review
-// @access  Private
+//@desc     Mark flashcard as reviewed
+//@route    POST /api/flashcards/:cardId/review
+//@access   Private
 export const reviewFlashcard = async (req, res, next) => {
   try {
     const flashcardSet = await Flashcard.findOne({
-      "cards._id": req.params.cardId,
+      "cards._id": req.params.cardId, // since we're using cards.(dot) that's why it must be inside double quotes
+      //This is how MongoDB understands nested field queries
       userId: req.user._id,
     });
 
@@ -87,9 +89,9 @@ export const reviewFlashcard = async (req, res, next) => {
   }
 };
 
-// @desc    Toggle star/favorite on flashcard
-// @route   PUT /api/flashcards/:cardId/star
-// @access  Private
+//@desc     Toggle star/favorite on flashcard
+//@route    PUT /api/flashcards/:cardId/star
+//@access   Private
 export const toggleStarFlashcard = async (req, res, next) => {
   try {
     const flashcardSet = await Flashcard.findOne({
@@ -117,7 +119,7 @@ export const toggleStarFlashcard = async (req, res, next) => {
       });
     }
 
-    // Toggle star
+    //Toggle Star
     flashcardSet.cards[cardIndex].isStarred =
       !flashcardSet.cards[cardIndex].isStarred;
 
@@ -133,12 +135,12 @@ export const toggleStarFlashcard = async (req, res, next) => {
   }
 };
 
-// @desc    Delete flashcard set
-// @route   DELETE /api/flashcards/:id
-// @access  Private
+//@desc     Delete flashcard set
+//@route    DELETE /api/flashcards/:id
+//@access   Private
 export const deleteFlashcardSet = async (req, res, next) => {
   try {
-    const flashcardSet = await Flashcard.findOne({
+    const flashcardSet = Flashcard.findOne({
       _id: req.params.id,
       userId: req.user._id,
     });
