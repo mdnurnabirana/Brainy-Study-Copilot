@@ -306,7 +306,7 @@ You can register a new account, or use seeded users if available:
 
 ```
 Email: userone@gmail.com
-Password: 1234Aa!
+Password: User#1
 ```
 
 ---

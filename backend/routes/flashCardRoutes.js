@@ -5,7 +5,7 @@ import {
   reviewFlashcard,
   toggleStarFlashcard,
   deleteFlashcardSet,
-} from "../controllers/flashcardController.js";
+} from "../controllers/flashCardController.js";
 
 import protect from "../middleware/auth.js";
 
