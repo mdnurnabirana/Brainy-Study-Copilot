@@ -1,15 +1,48 @@
 import Document from "../models/Document.js";
 import Flashcard from "../models/Flashcard.js";
 import Quiz from "../models/Quiz.js";
+import supabase from "../config/supabase.js";
 import { extractTextFromPDF } from "../utils/pdfParser.js";
 import { chunkText } from "../utils/textChunker.js";
-import fs from "fs/promises";
 import mongoose from "mongoose";
+
+const PDF_BUCKET = "pdfs";
+
+const buildStoragePath = (userId, originalName) => {
+  const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return `documents/${userId}/${uniqueSuffix}-${safeName}`;
+};
+
+const uploadPdfToSupabase = async (buffer, storagePath) => {
+  const { error } = await supabase.storage
+    .from(PDF_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: "application/pdf",
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(`Failed to upload PDF: ${error.message}`);
+  }
+};
+
+const getPublicUrl = (storagePath) => {
+  const { data } = supabase.storage.from(PDF_BUCKET).getPublicUrl(storagePath);
+  return data.publicUrl;
+};
+
+const deletePdfFromSupabase = async (storagePath) => {
+  if (!storagePath) return;
+  await supabase.storage.from(PDF_BUCKET).remove([storagePath]);
+};
 
 // @desc    Upload PDF document
 // @route   POST /api/documents/upload
 // @access  Private
 export const uploadDocument = async (req, res, next) => {
+  let storagePath;
+
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -21,8 +54,6 @@ export const uploadDocument = async (req, res, next) => {
 
     const { title } = req.body;
     if (!title) {
-      //Delete uploaded file if no title provided
-      await fs.unlink(req.file.path);
       return res.status(400).json({
         success: false,
         error: "Please provide a document title",
@@ -30,23 +61,21 @@ export const uploadDocument = async (req, res, next) => {
       });
     }
 
-    //Construct a URL for uploaded file
-    const baseUrl = process.env.BACKEND_URL;
-    const fileUrl = `${baseUrl}/uploads/documents/${req.file.filename}`;
+    storagePath = buildStoragePath(req.user._id, req.file.originalname);
+    await uploadPdfToSupabase(req.file.buffer, storagePath);
+    const fileUrl = getPublicUrl(storagePath);
 
-    //Create document record
     const document = await Document.create({
       userId: req.user._id,
       title,
       fileName: req.file.originalname,
-      filePath: fileUrl, //Store the URL instead of the local path
+      filePath: fileUrl,
+      storagePath,
       fileSize: req.file.size,
       status: "processing",
     });
 
-    //Process PDF in background (in production,use a queue like Bull)
-    processPDF(document._id, req.file.path).catch((err) => {
-      //The PDF is being processed asynchronously
+    processPDF(document._id, req.file.buffer).catch((err) => {
       console.error("PDF processing error:", err);
     });
 
@@ -56,23 +85,20 @@ export const uploadDocument = async (req, res, next) => {
       message: "Document uploaded successfully. Processing in progress...",
     });
   } catch (error) {
-    //Clean up file on error
-    if (req.file) {
-      await fs.unlink(req.file.path).catch(() => {});
+    if (storagePath) {
+      await deletePdfFromSupabase(storagePath).catch(() => {});
     }
     next(error);
   }
 };
 
 // Helper function to process PDF
-const processPDF = async (documentId, filePath) => {
+const processPDF = async (documentId, pdfBuffer) => {
   try {
-    const { text } = await extractTextFromPDF(filePath);
+    const { text } = await extractTextFromPDF(pdfBuffer);
 
-    //Create chunks
     const chunks = chunkText(text, 500, 50);
 
-    //Update document
     await Document.findByIdAndUpdate(documentId, {
       extractedText: text,
       chunks: chunks,
@@ -98,11 +124,10 @@ export const getDocuments = async (req, res, next) => {
       },
       {
         $lookup: {
-          //Look in the flashcards collection
           from: "flashcards",
           localField: "_id",
-          foreignField: "documentId", //Match where flashcards.documentId === documents._id
-          as: "flashcardSets", //Put the matching flashcards into a new array field called flashcardSets
+          foreignField: "documentId",
+          as: "flashcardSets",
         },
       },
       {
@@ -115,22 +140,20 @@ export const getDocuments = async (req, res, next) => {
       },
       {
         $addFields: {
-          //Adds two new fields to each document:
           flashcardCount: { $size: "$flashcardSets" },
           quizCount: { $size: "$quizzes" },
         },
       },
       {
         $project: {
-          //Removes fields you don’t want in the final response:
-          extractedText: 0, //Using 0 means “exclude this field”.
+          extractedText: 0,
           chunks: 0,
           flashcardSets: 0,
           quizzes: 0,
         },
       },
       {
-        $sort: { uploadDate: -1 }, //Sorts the results: By uploadDate In descending order (-1) So newest documents appear first
+        $sort: { uploadDate: -1 },
       },
     ]);
 
@@ -162,7 +185,6 @@ export const getDocument = async (req, res, next) => {
       });
     }
 
-    // Get counts of associated flashcards and quizzes
     const flashcardCount = await Flashcard.countDocuments({
       documentId: document._id,
       userId: req.user._id,
@@ -172,11 +194,9 @@ export const getDocument = async (req, res, next) => {
       userId: req.user._id,
     });
 
-    // Update last accessed
     document.lastAccessed = Date.now();
     await document.save();
 
-    //Combine document data with counts
     const documentData = document.toObject();
     documentData.flashcardCount = flashcardCount;
     documentData.quizCount = quizCount;
@@ -208,10 +228,8 @@ export const deleteDocument = async (req, res, next) => {
       });
     }
 
-    //Delete file from filesystem
-    await fs.unlink(document.filePath).catch(() => {});
+    await deletePdfFromSupabase(document.storagePath);
 
-    //Delete document
     await document.deleteOne();
 
     res.status(200).json({

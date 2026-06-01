@@ -20,6 +20,10 @@ const documentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    storagePath: {
+      type: String,
+      required: true,
+    },
     fileSize: {
       type: Number,
       required: true,
