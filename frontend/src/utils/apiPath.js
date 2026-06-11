@@ -1,5 +1,5 @@
 export const BASE_URL =
-  "http://localhost:8000";
+  "https://brainy-study-copilot.onrender.com";
 
 export const API_PATHS = {
   AUTH: {
