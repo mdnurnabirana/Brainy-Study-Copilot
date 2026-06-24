@@ -29,20 +29,18 @@ const userSchema = mongoose.Schema(
     },
   },
   {
-    timestamps: true, //It automatically adds and manages two fields in your documents:- createdAt: Date,updatedAt: Date
+    timestamps: true, 
   },
 );
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  //use a normal function, not an arrow function
   if (!this.isModified("password")) {
-    //When you update other fields (like email or name), you don’t want to re-hash
-    return; //the already hashed password.
+    return; 
   }
 
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt); //await is necessary if you are using the async version of bcrypt.hash
+  this.password = await bcrypt.hash(this.password, salt); 
 });
 
 // Compare password method

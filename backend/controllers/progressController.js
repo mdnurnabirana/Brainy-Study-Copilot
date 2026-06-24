@@ -16,7 +16,7 @@ export const getDashboard = async (req, res, next) => {
     const completedQuizzes = await Quiz.countDocuments({
       userId,
       completedAt: { $ne: null },
-    }); //Means “completedAt is not equal to null”//Count all quizzes for this user that have a non-null completedAt value
+    }); 
 
     // Get flashcard statistics
     const flashcardSets = await Flashcard.find({ userId });
@@ -36,7 +36,7 @@ export const getDashboard = async (req, res, next) => {
       quizzes.length > 0
         ? Math.round(
             quizzes.reduce((sum, q) => sum + q.score, 0) / quizzes.length,
-          ) //This adds up all quiz scores:sum starts at 0
+          ) 
         : 0;
 
     //Recent activity
@@ -51,8 +51,7 @@ export const getDashboard = async (req, res, next) => {
       .populate("documentId", "title")
       .select("title score totalQuestions completedAt");
 
-    //Study streak (simplified - in production, track daily activity)
-    const studyStreak = Math.floor(Math.random() * 7) + 1; //Mock date
+    const studyStreak = Math.floor(Math.random() * 7) + 1;
 
     res.status(200).json({
       success: true,

@@ -3,7 +3,6 @@ import User from "../models/User.js";
 
 //Generate JWT token
 const generateToken = (id) => {
-  //JWT lets the server prove “this user is logged in” without storing session data in memory or a database//*Jab tak ye token rahega tab tak user logged in rahega
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
@@ -76,7 +75,7 @@ export const login = async (req, res, next) => {
     }
 
     //Check for user {include password for comparison}
-    const user = await User.findOne({ email }).select("+password"); //we have written select: false in userSchema(password field)//+ means:“Include this field even though it is excluded by default.
+    const user = await User.findOne({ email }).select("+password"); 
 
     if (!user) {
       return res.status(401).json({
@@ -108,7 +107,7 @@ export const login = async (req, res, next) => {
         email: user.email,
         profileImage: user.profileImage,
       },
-      token, //Client stores the token (usually in memory, localStorage, or httpOnly cookie)
+      token, 
       message: "login successful",
     });
   } catch (error) {

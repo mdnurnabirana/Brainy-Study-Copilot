@@ -10,8 +10,7 @@ export const getFlashcards = async (req, res, next) => {
       documentId: req.params.documentId,
     })
       .populate("documentId", "title fileName")
-      .sort({ createdAt: -1 }); //populate->Replaces the documentId field (which is normally just an ObjectId) with the actual document data
-    //sort->Sorts the flashcards so the newest ones come first.
+      .sort({ createdAt: -1 }); 
 
     res.status(200).json({
       success: true,
@@ -48,8 +47,7 @@ export const getAllFlashcardSets = async (req, res, next) => {
 export const reviewFlashcard = async (req, res, next) => {
   try {
     const flashcardSet = await Flashcard.findOne({
-      "cards._id": req.params.cardId, // since we're using cards.(dot) that's why it must be inside double quotes
-      //This is how MongoDB understands nested field queries
+      "cards._id": req.params.cardId, 
       userId: req.user._id,
     });
 
@@ -140,7 +138,7 @@ export const toggleStarFlashcard = async (req, res, next) => {
 //@access   Private
 export const deleteFlashcardSet = async (req, res, next) => {
   try {
-    const flashcardSet = Flashcard.findOne({
+    const flashcardSet = await Flashcard.findOne({
       _id: req.params.id,
       userId: req.user._id,
     });

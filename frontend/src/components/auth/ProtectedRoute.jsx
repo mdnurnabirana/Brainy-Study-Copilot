@@ -12,7 +12,7 @@ const ProtectedRoute = () => {
 
   return isAuthenticated ? (
     <AppLayout>
-      <Outlet /> {/*childeren routes of ProtectedRoute in app.jsx will render*/}
+      <Outlet /> 
     </AppLayout>
   ) : (
     <Navigate to={"/login"} replace />
