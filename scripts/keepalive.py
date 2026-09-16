@@ -1,27 +1,34 @@
 #!/usr/bin/env python3
 """Keep-alive pings for Supabase Storage and MongoDB."""
 import sys
-import json
 import os
+import uuid
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-
+# ── Supabase ────────────────────────────────────────────────────────
 def keep_alive_supabase():
-    url = os.environ["SUPABASE_URL"]
+    url = os.environ["SUPABASE_URL"].rstrip("/")
     key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     bucket = "pdfs"
-    storage_path = "keepalive/sample.pdf"
+    storage_path = f"keepalive/{uuid.uuid4().hex}.pdf"
     pdf_bytes = (SCRIPT_DIR / "sample.pdf").read_bytes()
+
+    boundary = uuid.uuid4().hex
+    body = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="sample.pdf"\r\n'
+        f"Content-Type: application/pdf\r\n\r\n"
+    ).encode() + pdf_bytes + f"\r\n--{boundary}--\r\n".encode()
 
     # Upload
     upload_url = f"{url}/storage/v1/object/{bucket}/{storage_path}"
-    req = Request(upload_url, data=pdf_bytes, method="POST")
+    req = Request(upload_url, data=body, method="POST")
     req.add_header("Authorization", f"Bearer {key}")
-    req.add_header("Content-Type", "application/pdf")
+    req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
     req.add_header("x-upsert", "true")
     try:
         resp = urlopen(req)
@@ -40,11 +47,12 @@ def keep_alive_supabase():
         raise RuntimeError(f"Delete failed: {e.code} {e.read().decode()}")
 
 
+# ── MongoDB ─────────────────────────────────────────────────────────
 def keep_alive_mongodb():
     from pymongo import MongoClient
 
     uri = os.environ["MONGODB_URI"]
-    client = MongoClient(uri)
+    client = MongoClient(uri, serverSelectionTimeoutMS=10000)
     db = client.get_database()
     collection = db["test"]
 
@@ -66,5 +74,5 @@ if __name__ == "__main__":
     elif task == "mongodb":
         keep_alive_mongodb()
     else:
-        print(f"Usage: python keepalive.py <supabase|mongodb>", file=sys.stderr)
+        print("Usage: python keepalive.py <supabase|mongodb>", file=sys.stderr)
         sys.exit(1)
