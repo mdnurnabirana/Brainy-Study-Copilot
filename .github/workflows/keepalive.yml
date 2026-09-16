@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install pymongo
-        run: pip install "pymongo[srv]"
+        run: pip install "pymongo[srv]" dnspython
 
       - name: Insert then drop test collection
         run: python scripts/keepalive.py mongodb
