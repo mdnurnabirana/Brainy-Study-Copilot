@@ -21,6 +21,8 @@ jobs:
           echo "Response: $STATUS"
           if [ "$STATUS" = "000" ]; then
             echo "Warning: connection timed out — Render may still be waking up"
+          elif [ "$STATUS" -ne 200 ]; then
+            echo "Warning: unexpected status $STATUS"
           else
             echo "OK: Render responded with $STATUS"
           fi

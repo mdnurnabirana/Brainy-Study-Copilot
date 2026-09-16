@@ -40,6 +40,11 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/progress', progressRoutes);
 
+// Health check
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 app.use(errorHander);
 
 // 404 handler
