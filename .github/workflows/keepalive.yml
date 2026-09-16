@@ -34,16 +34,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm install @supabase/supabase-js
-
       - name: Upload then delete sample PDF
-        run: node scripts/keepalive.mjs supabase
+        run: python scripts/keepalive.py supabase
         env:
           SUPABASE_URL: ${{ secrets.BRAINY_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.BRAINY_SUPABASE_SERVICE_ROLE_KEY }}
@@ -56,15 +48,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm install mongoose
+      - name: Install pymongo
+        run: pip install pymongo
 
       - name: Insert then drop test collection
-        run: node scripts/keepalive.mjs mongodb
+        run: python scripts/keepalive.py mongodb
         env:
           MONGODB_URI: ${{ secrets.BRAINY_MONGODB_URI }}
