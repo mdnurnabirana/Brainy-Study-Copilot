@@ -2,23 +2,27 @@ name: Keep-Alive
 
 on:
   schedule:
-    - cron: "0 * * * *" # every hour → Render
+    - cron: "*/10 * * * *" # every 10 minutes → Render
     - cron: "0 0 */5 * *" # every 5 days → Supabase
-    - cron: "0 0 1 * *" # 1st of month → MongoDB
+    - cron: "0 0 1 * *" # 1st of every month → MongoDB
   workflow_dispatch:
 
 jobs:
-  # ── Render: hit every hour ───────────────────────────────────────
+  # ── Render: hit every 10 minutes ────────────────────────────────
   keepalive-render:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 * * * *'
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/10 * * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 3
+
     steps:
       - name: Ping Render backend
         run: |
           echo "Hitting $RENDER_URL/ ..."
+
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$RENDER_URL/" || true)
+
           echo "Response: $STATUS"
+
           if [ "$STATUS" = "000" ]; then
             echo "Warning: connection timed out — Render may still be waking up"
           elif [ "$STATUS" -ne 200 ]; then
@@ -26,6 +30,7 @@ jobs:
           else
             echo "OK: Render responded with $STATUS"
           fi
+
         env:
           RENDER_URL: ${{ secrets.BRAINY_RENDER_URL }}
 
@@ -33,6 +38,7 @@ jobs:
   keepalive-supabase:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 */5 * *'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,10 +49,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.BRAINY_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.BRAINY_SUPABASE_SERVICE_ROLE_KEY }}
 
-  # ── MongoDB: insert + drop test collection once a month ──────────
+  # ── MongoDB: insert + drop test collection once a month ─────────
   keepalive-mongodb:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 1 * *'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
