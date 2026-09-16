@@ -13,8 +13,11 @@ def _check_env(*names):
     for name in names:
         val = os.environ.get(name, "").strip()
         if not val:
-            raise RuntimeError(f"Secret {name} is empty or not set")
-        print(f"[env] {name} = {'set' if val else 'EMPTY'} (len={len(val)})")
+            raise RuntimeError(
+                f"Secret {name} is empty or not set.\n"
+                f"Go to GitHub repo → Settings → Secrets → Actions and create it."
+            )
+        print(f"[env] {name} = set (len={len(val)})")
     return {name: os.environ[name].strip() for name in names}
 
 
@@ -109,7 +112,7 @@ def keep_alive_mongodb():
         else:
             raise
 
-    db = client.get_database()
+    db = client.get_database("test")
     collection = db["test"]
 
     result = collection.insert_one({
