@@ -12,16 +12,17 @@ jobs:
   keepalive-render:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 * * * *'
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - name: Ping Render backend
         run: |
           echo "Hitting $RENDER_URL/ ..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$RENDER_URL/")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$RENDER_URL/" || true)
           echo "Response: $STATUS"
-          # 200 or 404 are both fine — the goal is just to wake the dyno
-          if [ "$STATUS" -eq 000 ]; then
-            echo "Error: connection failed"
-            exit 1
+          if [ "$STATUS" = "000" ]; then
+            echo "Warning: connection timed out — Render may still be waking up"
+          else
+            echo "OK: Render responded with $STATUS"
           fi
         env:
           RENDER_URL: ${{ secrets.BRAINY_RENDER_URL }}
