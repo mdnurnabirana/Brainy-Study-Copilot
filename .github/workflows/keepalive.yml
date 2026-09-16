@@ -1,0 +1,70 @@
+name: Keep-Alive
+
+on:
+  schedule:
+    - cron: "0 * * * *" # every hour → Render
+    - cron: "0 0 */5 * *" # every 5 days → Supabase
+    - cron: "0 0 1 * *" # 1st of month → MongoDB
+  workflow_dispatch:
+
+jobs:
+  # ── Render: hit every hour ───────────────────────────────────────
+  keepalive-render:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 * * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render backend
+        run: |
+          echo "Hitting $RENDER_URL/ ..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$RENDER_URL/")
+          echo "Response: $STATUS"
+          # 200 or 404 are both fine — the goal is just to wake the dyno
+          if [ "$STATUS" -eq 000 ]; then
+            echo "Error: connection failed"
+            exit 1
+          fi
+        env:
+          RENDER_URL: ${{ secrets.BRAINY_RENDER_URL }}
+
+  # ── Supabase: upload + delete PDF every 5 days ──────────────────
+  keepalive-supabase:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 */5 * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js
+
+      - name: Upload then delete sample PDF
+        run: node scripts/keepalive.mjs supabase
+        env:
+          SUPABASE_URL: ${{ secrets.BRAINY_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.BRAINY_SUPABASE_SERVICE_ROLE_KEY }}
+
+  # ── MongoDB: insert + drop test collection once a month ──────────
+  keepalive-mongodb:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 1 * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install mongoose
+
+      - name: Insert then drop test collection
+        run: node scripts/keepalive.mjs mongodb
+        env:
+          MONGODB_URI: ${{ secrets.BRAINY_MONGODB_URI }}
