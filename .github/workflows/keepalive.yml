@@ -2,15 +2,27 @@ name: Keep-Alive
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    # Render: every 10 minutes
+    - cron: "3,13,23,33,43,53 * * * *"
+
+    # Supabase: every 5 days at 00:00 UTC
     - cron: "0 0 */5 * *"
+
+    # MongoDB: 1st day of every month at 00:00 UTC
     - cron: "0 0 1 * *"
+
+  # Allow manual execution from GitHub Actions
   workflow_dispatch:
 
 jobs:
-  # ── Render: every 10 minutes ───────────────────────────────────
+  # ────────────────────────────────────────────────────────────────
+  # Render: every 10 minutes
+  # ────────────────────────────────────────────────────────────────
   keepalive-render:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/10 * * * *'
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '3,13,23,33,43,53 * * * *'
+
     runs-on: ubuntu-latest
     timeout-minutes: 3
 
@@ -19,7 +31,12 @@ jobs:
         run: |
           echo "Hitting $RENDER_URL/ ..."
 
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$RENDER_URL/" || true)
+          STATUS=$(curl \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 90 \
+            "$RENDER_URL/" || true)
 
           echo "Response: $STATUS"
 
@@ -30,12 +47,19 @@ jobs:
           else
             echo "OK: Render responded with $STATUS"
           fi
+
         env:
           RENDER_URL: ${{ secrets.BRAINY_RENDER_URL }}
 
-  # ── Supabase: every 5 days ─────────────────────────────────────
+
+  # ────────────────────────────────────────────────────────────────
+  # Supabase: every 5 days
+  # ────────────────────────────────────────────────────────────────
   keepalive-supabase:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 */5 * *'
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 0 */5 * *'
+
     runs-on: ubuntu-latest
 
     steps:
@@ -48,9 +72,15 @@ jobs:
           SUPABASE_URL: ${{ secrets.BRAINY_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.BRAINY_SUPABASE_SERVICE_ROLE_KEY }}
 
-  # ── MongoDB: 1st of every month ────────────────────────────────
+
+  # ────────────────────────────────────────────────────────────────
+  # MongoDB: 1st day of every month
+  # ────────────────────────────────────────────────────────────────
   keepalive-mongodb:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 1 * *'
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 0 1 * *'
+
     runs-on: ubuntu-latest
 
     steps:
