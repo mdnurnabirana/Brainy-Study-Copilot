@@ -11,7 +11,7 @@ export const generate = async (prompt) => {
   }
 
   const model =
-    process.env.OPENROUTER_MODEL || "google/gemma-2-9b-it:free";
+    process.env.OPENROUTER_MODEL || "nvidia/nemotron-3.5-lightning:free";
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: "POST",

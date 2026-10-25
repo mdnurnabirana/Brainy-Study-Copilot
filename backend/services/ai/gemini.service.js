@@ -31,7 +31,7 @@ const extractText = (response) => {
 
 export const generate = async (prompt) => {
   const ai = getClient();
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
   const response = await ai.models.generateContent({
     model,

@@ -10,7 +10,7 @@ export const generate = async (prompt) => {
     throw new Error("GROQ_API_KEY is not configured");
   }
 
-  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -23,6 +23,9 @@ export const generate = async (prompt) => {
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
       max_tokens: 4096,
+      // gpt-oss is a reasoning model and defaults to "medium". Low effort keeps
+      // latency and token usage down for flashcard/quiz generation.
+      reasoning_effort: "low",
     }),
   });
 
